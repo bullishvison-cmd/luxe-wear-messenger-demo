@@ -1,0 +1,901 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>LUXE WEAR — Messenger Demo</title>
+    <style>
+      :root {
+        --bg: #eef0f3;
+        --surface: #ffffff;
+        --surface-2: #f5f6f7;
+        --text: #050505;
+        --muted: #65676b;
+        --faint: #8a8d91;
+        --border: #e4e6eb;
+        --bubble-in: #f0f0f0;
+        --bubble-out: #0084ff;
+        --bubble-out-text: #ffffff;
+        --accent: #0084ff;
+        --accent-dim: #b8dcff;
+        --chip-bg: #ffffff;
+        --shadow: 0 12px 40px rgba(15, 20, 30, 0.10), 0 2px 8px rgba(15, 20, 30, 0.06);
+        --header-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0a0a0b;
+          --surface: #1c1e21;
+          --surface-2: #242628;
+          --text: #e4e6eb;
+          --muted: #b0b3b8;
+          --faint: #8a8d91;
+          --border: #3a3b3d;
+          --bubble-in: #3a3b3c;
+          --chip-bg: #242628;
+          --shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
+          --header-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+      }
+      .sr-only { position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap; }
+      .app { height: 100dvh; display: flex; justify-content: center; }
+      .chat { display: flex; flex-direction: column; width: 100%; max-width: 760px; height: 100%; background: var(--surface); }
+      @media (min-width: 820px) {
+        .app { padding: 22px 16px; }
+        .chat { border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border); }
+      }
+      .chat-header { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--surface); box-shadow: var(--header-shadow); z-index: 3; flex: 0 0 auto; }
+      .avatar { width: 42px; height: 42px; border-radius: 50%; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; background: #111318; color: #f3ead8; font-family: Georgia, "Times New Roman", serif; font-size: 15px; letter-spacing: 1.5px; border: 1px solid rgba(0,0,0,0.15); position: relative; }
+      @media (prefers-color-scheme: dark) { .avatar { background: #f3ead8; color: #111318; } }
+      .avatar::after { content: ""; position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border-radius: 50%; background: #31a24c; border: 2px solid var(--surface); }
+      .head-meta { flex: 1 1 auto; min-width: 0; }
+      .head-name { font-size: 16px; font-weight: 600; line-height: 1.2; letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .head-status { font-size: 12.5px; color: var(--muted); line-height: 1.25; }
+      .head-actions { display: flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+      .icon-btn { width: 38px; height: 38px; border: none; background: transparent; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--accent); padding: 0; }
+      .icon-btn:hover { background: var(--surface-2); }
+      .icon-btn:focus-visible, .chip:focus-visible, .restart-btn:focus-visible, .send-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
+      .demo-bar { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 16px; border-bottom: 1px solid var(--border); background: var(--surface); }
+      .demo-label { font-size: 12px; color: var(--faint); letter-spacing: 0.2px; }
+      .restart-btn { border: none; background: transparent; color: var(--accent); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 5px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; }
+      .restart-btn:hover { background: var(--surface-2); }
+      .restart-btn svg { width: 13px; height: 13px; fill: currentColor; }
+      .info-pop { flex: 0 0 auto; margin: 10px 14px 0; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); padding: 12px 14px; font-size: 13.5px; line-height: 1.5; }
+      .info-pop h2 { margin: 0 0 6px; font-size: 13px; letter-spacing: 0.6px; }
+      .info-pop dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; }
+      .info-pop dt { color: var(--muted); }
+      .info-pop dd { margin: 0; }
+      .info-pop p { margin: 8px 0 0; color: var(--muted); font-size: 12.5px; }
+      .messages { flex: 1 1 auto; overflow-y: auto; padding: 14px 14px 8px; display: flex; flex-direction: column; overscroll-behavior: contain; }
+      .day-sep { text-align: center; font-size: 12px; color: var(--faint); margin: 2px 0 14px; }
+      .msg-row { display: flex; align-items: flex-end; gap: 8px; margin-top: 10px; animation: msgIn 0.22s ease-out; }
+      .msg-row.grp { margin-top: 2px; }
+      .msg-row.customer { justify-content: flex-end; }
+      .msg-mini-avatar { width: 28px; height: 28px; border-radius: 50%; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; background: #111318; color: #f3ead8; font-family: Georgia, "Times New Roman", serif; font-size: 9.5px; letter-spacing: 0.8px; visibility: hidden; }
+      @media (prefers-color-scheme: dark) { .msg-mini-avatar { background: #f3ead8; color: #111318; } }
+      .msg-row.grp-last .msg-mini-avatar, .msg-row.single .msg-mini-avatar { visibility: visible; }
+      .msg-stack { display: flex; flex-direction: column; max-width: 72%; }
+      .msg-row.customer .msg-stack { align-items: flex-end; }
+      .msg-row.brand .msg-stack { align-items: flex-start; }
+      @media (min-width: 640px) { .msg-stack { max-width: 62%; } }
+      .bubble { padding: 8px 13px; border-radius: 18px; font-size: 15px; line-height: 1.38; overflow-wrap: anywhere; white-space: pre-wrap; }
+      .msg-row.brand .bubble { background: var(--bubble-in); color: var(--text); }
+      .msg-row.customer .bubble { background: var(--bubble-out); color: var(--bubble-out-text); }
+      .msg-row.brand.grp-first .bubble { border-bottom-left-radius: 4px; }
+      .msg-row.brand.grp-mid .bubble { border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
+      .msg-row.brand.grp-last .bubble { border-top-left-radius: 4px; }
+      .msg-row.customer.grp-first .bubble { border-bottom-right-radius: 4px; }
+      .msg-row.customer.grp-mid .bubble { border-top-right-radius: 4px; border-bottom-right-radius: 4px; }
+      .msg-row.customer.grp-last .bubble { border-top-right-radius: 4px; }
+      .msg-time { font-size: 11px; color: var(--faint); margin-top: 4px; padding: 0 4px; display: none; }
+      .msg-row.grp-last .msg-time, .msg-row.single .msg-time { display: block; }
+      .typing-bubble { display: inline-flex; gap: 4px; padding: 12px 14px; }
+      .typing-bubble span { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); animation: typingBounce 1.1s infinite ease-in-out; }
+      .typing-bubble span:nth-child(2) { animation-delay: 0.15s; }
+      .typing-bubble span:nth-child(3) { animation-delay: 0.3s; }
+      @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.55; } 30% { transform: translateY(-4px); opacity: 1; } }
+      @keyframes msgIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+      @media (prefers-reduced-motion: reduce) { .msg-row { animation: none; } .typing-bubble span { animation: none; opacity: 0.8; } }
+      .toast { flex: 0 0 auto; align-self: center; margin: 0 14px; max-height: 0; overflow: hidden; transition: max-height 0.25s ease, margin 0.25s ease; }
+      .toast.show { max-height: 60px; margin: 8px 14px 0; }
+      .toast-inner { background: #111318; color: #f5f5f5; font-size: 13px; line-height: 1.4; padding: 8px 14px; border-radius: 10px; box-shadow: var(--shadow); text-align: center; }
+      @media (prefers-color-scheme: dark) { .toast-inner { background: #f5f5f5; color: #111318; } }
+      .chips { flex: 0 0 auto; display: flex; gap: 8px; padding: 8px 14px 2px; overflow-x: auto; scrollbar-width: none; }
+      .chips::-webkit-scrollbar { display: none; }
+      .chips.hidden { display: none; }
+      .chip { flex: 0 0 auto; font: inherit; font-size: 13.5px; font-weight: 500; color: var(--accent); background: var(--chip-bg); border: 1px solid var(--accent-dim); border-radius: 999px; padding: 7px 14px; cursor: pointer; min-height: 36px; }
+      .chip:hover { background: var(--surface-2); }
+      .chip:active { transform: scale(0.97); }
+      .composer { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: var(--surface); }
+      .composer-input-wrap { flex: 1 1 auto; display: flex; align-items: center; background: var(--surface-2); border-radius: 999px; padding: 0 6px 0 16px; min-height: 42px; }
+      #composerInput { flex: 1 1 auto; border: none; outline: none; background: transparent; font: inherit; font-size: 15.5px; color: var(--text); min-width: 0; }
+      #composerInput::placeholder { color: var(--faint); }
+      .send-btn { flex: 0 0 auto; width: 38px; height: 38px; border: none; border-radius: 50%; background: transparent; color: var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+      .send-btn svg { width: 21px; height: 21px; fill: currentColor; }
+      .send-btn:disabled { color: var(--accent-dim); cursor: default; }
+      .send-btn:not(:disabled):hover { background: var(--surface-2); }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <section class="chat" aria-label="LUXE WEAR Messenger demo conversation">
+        <header class="chat-header">
+          <div class="avatar" aria-hidden="true">LW</div>
+          <div class="head-meta">
+            <div class="head-name">LUXE WEAR</div>
+            <div class="head-status">Automated replies enabled</div>
+          </div>
+          <div class="head-actions">
+            <button class="icon-btn" id="callBtn" type="button" aria-label="Voice call (not available in demo)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.4 11.4 0 0 0 3.57.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg>
+            </button>
+            <button class="icon-btn" id="videoBtn" type="button" aria-label="Video call (not available in demo)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+            </button>
+            <button class="icon-btn" id="infoBtn" type="button" aria-label="About this demo" aria-expanded="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="demo-bar">
+          <span class="demo-label">Interactive Messenger-style demo · Sample business data</span>
+          <button class="restart-btn" id="restartBtn" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1L6 7l6 6V9a6 6 0 1 1-6 6H4a8 8 0 1 0 8-10z"/></svg>
+            Restart demo
+          </button>
+        </div>
+
+        <div class="info-pop" id="infoPop" hidden>
+          <h2>ABOUT LUXE WEAR (DEMO)</h2>
+          <dl>
+            <dt>Product</dt><dd>Classic Premium Hoodie — $39</dd>
+            <dt>Sizes</dt><dd>S, M, L, XL</dd>
+            <dt>Colors</dt><dd>Black, gray, navy</dd>
+            <dt>Shipping</dt><dd>Standard US, typically 3–5 business days</dd>
+            <dt>Returns</dt><dd>Eligible unworn items within 30 days</dd>
+            <dt>Support</dt><dd>Mon–Fri, 9 AM–5 PM Eastern Time</dd>
+          </dl>
+          <p>This is a front-end demonstration of how a Messenger chatbot could behave. It is not connected to a live Facebook Page, inventory system, payment processor, or order database — a real integration would use the Meta Messenger Platform.</p>
+        </div>
+
+        <div class="messages" id="messages" role="log" aria-live="polite" aria-label="Conversation"></div>
+        <div class="toast" id="toast" role="status"><div class="toast-inner" id="toastInner"></div></div>
+        <div class="chips" id="chips" aria-label="Suggested questions"></div>
+
+        <form class="composer" id="composer" autocomplete="off">
+          <div class="composer-input-wrap">
+            <label class="sr-only" for="composerInput">Message LUXE WEAR</label>
+            <input id="composerInput" type="text" placeholder="Message" maxlength="1000" enterkeyhint="send" />
+          </div>
+          <button class="send-btn" id="sendBtn" type="submit" aria-label="Send message" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.4 20.4 21.85 12 3.4 3.6l-.01 6.53L14 12 3.39 13.87z"/></svg>
+          </button>
+        </form>
+      </section>
+    </div>
+
+    <script>
+      "use strict";
+      /* ================= STORE KNOWLEDGE (single source of truth) ================= */
+      var BIZ = {
+        brand: "LUXE WEAR",
+        product: "Classic Premium Hoodie",
+        price: 39,
+        sizes: ["S", "M", "L", "XL"],
+        sizeNames: { S: "Small", M: "Medium", L: "Large", XL: "Extra Large" },
+        colors: ["Black", "Gray", "Navy"],
+        material: "a soft cotton-blend fabric",
+        shippingTime: "Standard US shipping typically takes 3–5 business days",
+        returns: "Eligible unworn items can be returned within 30 days, subject to the store's return policy",
+        hours: "Monday–Friday, 9 AM–5 PM Eastern Time"
+      };
+      var WELCOME = "Hey! 👋 Welcome to LUXE WEAR! Thanks for messaging us. I’m here to help with anything you need. 😊\n\nLooking for something new, checking an order, or just have a question? Ask me anything!";
+
+      /* ================= CONTEXT ================= */
+      function freshContext() {
+        return {
+          topic: null, lastIntent: null, pendingOffer: null,
+          awaiting: null, // 'order_has_number' | 'recommend_who' | 'recommend_style' | 'mood'
+          size: null, color: null,
+          greetings: 0, thanksCount: 0, unknowns: 0,
+          fallbackCount: 0, lastFallbackText: null,
+          lastUserNorm: null, repeatCount: 0,
+          chipSet: "initial", msgCount: 0
+        };
+      }
+      var ctx = freshContext();
+      var replyQueue = [];
+      var processing = false;
+
+      /* ================= DOM ================= */
+      var messagesEl = document.getElementById("messages");
+      var composerForm = document.getElementById("composer");
+      var inputEl = document.getElementById("composerInput");
+      var sendBtn = document.getElementById("sendBtn");
+      var chipsEl = document.getElementById("chips");
+      var toastEl = document.getElementById("toast");
+      var toastInner = document.getElementById("toastInner");
+      var infoPop = document.getElementById("infoPop");
+      var infoBtn = document.getElementById("infoBtn");
+      var toastTimer = null;
+
+      function fmtTime(d) { return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }
+      function scrollToBottom(smooth) { messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: smooth ? "smooth" : "auto" }); }
+      function showToast(text) {
+        toastInner.textContent = text; toastEl.classList.add("show");
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 3200);
+      }
+      function addMessage(from, text, time) {
+        var row = document.createElement("div");
+        row.className = "msg-row " + from; row.dataset.from = from;
+        if (from === "brand") {
+          var av = document.createElement("div"); av.className = "msg-mini-avatar"; av.setAttribute("aria-hidden", "true"); av.textContent = "LW"; row.appendChild(av);
+        }
+        var stack = document.createElement("div"); stack.className = "msg-stack";
+        var bubble = document.createElement("div"); bubble.className = "bubble"; bubble.textContent = text;
+        var timeEl = document.createElement("div"); timeEl.className = "msg-time";
+        timeEl.textContent = (from === "customer" ? "Sent · " : "") + fmtTime(time || new Date());
+        stack.appendChild(bubble); stack.appendChild(timeEl); row.appendChild(stack);
+        messagesEl.appendChild(row); refreshGroups(); return row;
+      }
+      function refreshGroups() {
+        var rows = messagesEl.querySelectorAll(".msg-row");
+        rows.forEach(function (row, i) {
+          var prev = rows[i - 1], next = rows[i + 1];
+          var samePrev = prev && prev.dataset.from === row.dataset.from && !prev.classList.contains("typing-row");
+          var sameNext = next && next.dataset.from === row.dataset.from && !next.classList.contains("typing-row");
+          row.classList.toggle("grp", !!(samePrev || sameNext));
+          row.classList.toggle("grp-first", !!sameNext && !samePrev);
+          row.classList.toggle("grp-mid", !!samePrev && !!sameNext);
+          row.classList.toggle("grp-last", !!samePrev && !sameNext);
+          row.classList.toggle("single", !samePrev && !sameNext);
+        });
+      }
+      var typingRow = null;
+      function showTyping() {
+        if (typingRow) return;
+        typingRow = document.createElement("div"); typingRow.className = "msg-row brand typing-row"; typingRow.dataset.from = "brand";
+        var av = document.createElement("div"); av.className = "msg-mini-avatar"; av.style.visibility = "visible"; av.setAttribute("aria-hidden", "true"); av.textContent = "LW";
+        var stack = document.createElement("div"); stack.className = "msg-stack";
+        var bubble = document.createElement("div"); bubble.className = "bubble typing-bubble"; bubble.setAttribute("aria-label", "LUXE WEAR is typing"); bubble.innerHTML = "<span></span><span></span><span></span>";
+        stack.appendChild(bubble); typingRow.appendChild(av); typingRow.appendChild(stack);
+        messagesEl.appendChild(typingRow); refreshGroups(); scrollToBottom(true);
+      }
+      function hideTyping() { if (typingRow) { typingRow.remove(); typingRow = null; refreshGroups(); } }
+
+      /* ================= QUICK REPLIES (contextual) ================= */
+      var CHIP_SETS = {
+        initial: [
+          { label: "🛍️ Help me find something", msg: "Help me find something" },
+          { label: "💰 Product prices", msg: "What are your product prices?" },
+          { label: "📏 Sizes & fit", msg: "What sizes do you have?" },
+          { label: "🚚 Shipping & delivery", msg: "How long does shipping take?" },
+          { label: "📦 Track my order", msg: "Track my order" },
+          { label: "↩️ Returns & refunds", msg: "What is your return policy?" }
+        ],
+        greeting: [
+          { label: "Browse products", msg: "What do you sell?" },
+          { label: "Find my size", msg: "What sizes do you have?" },
+          { label: "Ask a question", msg: "Can you help me?" }
+        ],
+        price: [
+          { label: "See colors", msg: "What colors do you have?" },
+          { label: "Check sizes", msg: "What sizes do you have?" },
+          { label: "Ask about shipping", msg: "How long does shipping take?" }
+        ],
+        colors: [
+          { label: "Check sizes", msg: "What sizes do you have?" },
+          { label: "Product prices", msg: "How much is the hoodie?" },
+          { label: "Shipping & delivery", msg: "How long does shipping take?" }
+        ],
+        sizes: [
+          { label: "See colors", msg: "What colors do you have?" },
+          { label: "Product prices", msg: "How much is the hoodie?" },
+          { label: "Ask about shipping", msg: "How long does shipping take?" }
+        ],
+        shipping: [
+          { label: "Shipping cost", msg: "How much is shipping?" },
+          { label: "Returns", msg: "What is your return policy?" },
+          { label: "Track an order", msg: "Track my order" }
+        ],
+        returns: [
+          { label: "Exchange policy", msg: "Can I exchange an item?" },
+          { label: "Refund timing", msg: "How long do refunds take?" },
+          { label: "Contact support", msg: "Can I talk to a human?" }
+        ],
+        recommend: [
+          { label: "For myself", msg: "For myself" },
+          { label: "As a gift", msg: "As a gift" },
+          { label: "See colors", msg: "What colors do you have?" }
+        ],
+        recommendStyle: [
+          { label: "Everyday wear", msg: "Everyday" },
+          { label: "For an occasion", msg: "For a particular occasion" },
+          { label: "Just browsing", msg: "Just browsing" }
+        ],
+        tracking: [
+          { label: "Yes, I have one", msg: "Yes" },
+          { label: "No, I don't", msg: "No" },
+          { label: "Contact support", msg: "Can I talk to a human?" }
+        ],
+        general: [
+          { label: "🛍️ Help me find something", msg: "Help me find something" },
+          { label: "💰 Product prices", msg: "What are your product prices?" },
+          { label: "🚚 Shipping & delivery", msg: "How long does shipping take?" }
+        ],
+        support: [
+          { label: "Product prices", msg: "How much is the hoodie?" },
+          { label: "Shipping & delivery", msg: "How long does shipping take?" },
+          { label: "Returns & refunds", msg: "What is your return policy?" }
+        ]
+      };
+      function renderChips(name) {
+        var set = CHIP_SETS[name] || CHIP_SETS.general;
+        ctx.chipSet = name;
+        chipsEl.innerHTML = "";
+        set.forEach(function (c) {
+          var b = document.createElement("button");
+          b.type = "button"; b.className = "chip"; b.textContent = c.label; b.setAttribute("data-msg", c.msg);
+          chipsEl.appendChild(b);
+        });
+        chipsEl.classList.remove("hidden");
+      }
+
+      function renderWelcome() {
+        messagesEl.innerHTML = "";
+        var sep = document.createElement("div"); sep.className = "day-sep"; sep.textContent = "Today · " + fmtTime(new Date());
+        messagesEl.appendChild(sep);
+        addMessage("brand", WELCOME, new Date());
+        renderChips("initial");
+        scrollToBottom(false);
+      }
+    </script>
+
+    <script>
+      "use strict";
+      /* ============================================================
+         INTENT ENGINE — organized in layers:
+         SOCIAL · PRODUCTS · ORDERS · RETURNS/PAYMENTS · SUPPORT
+         Pipeline: normalize → awaiting follow-ups → bare picks →
+         short social phrases → support/order priorities → product
+         intents → generic follow-ups → fallback (repeat-aware).
+         ============================================================ */
+      var TYPO_FIXES = [
+        [/\bmutch\b/g, "much"], [/\bprce\b/g, "price"], [/\bshiping\b/g, "shipping"],
+        [/\bdelivary\b/g, "delivery"], [/\bretun\b/g, "return"], [/\bhodie\b/g, "hoodie"],
+        [/\bhoody\b/g, "hoodie"], [/\bgrey\b/g, "gray"], [/\bcolours\b/g, "colors"],
+        [/\bcolour\b/g, "color"], [/\bdicount\b/g, "discount"], [/\bexhcange\b/g, "exchange"],
+        [/\bavialable\b/g, "available"], [/\bprize\b/g, "price"], [/\brecieve\b/g, "receive"],
+        [/\brecieved\b/g, "received"], [/\bdamged\b/g, "damaged"], [/\bshiping\b/g, "shipping"],
+        [/\bprcie\b/g, "price"], [/\bshippping\b/g, "shipping"], [/\bdilivery\b/g, "delivery"],
+        [/\breturrn\b/g, "return"], [/\bexhange\b/g, "exchange"], [/\bdiscout\b/g, "discount"],
+        [/\bpayement\b/g, "payment"], [/\btraking\b/g, "tracking"], [/\boreder\b/g, "order"],
+        [/\badress\b/g, "address"], [/\bcolur\b/g, "color"], [/\bsieze\b/g, "size"],
+        [/\bshipng\b/g, "shipping"], [/\bdelivrey\b/g, "delivery"], [/\bavailible\b/g, "available"],
+        [/\bmeduim\b/g, "medium"], [/\bhoodies\b/g, "hoodie"], [/\bretuns\b/g, "returns"]
+      ];
+      var CONTRACTIONS = [
+        [/\bi'm\b/g, "i am"], [/\bi've\b/g, "i have"], [/\bi'll\b/g, "i will"], [/\bi'd\b/g, "i would"],
+        [/\bwhat's\b/g, "what is"], [/\bthat's\b/g, "that is"], [/\bit's\b/g, "it is"], [/\bhere's\b/g, "here is"],
+        [/\bdon't\b/g, "do not"], [/\bdoesn't\b/g, "does not"], [/\bcan't\b/g, "cannot"], [/\bwon't\b/g, "will not"],
+        [/\bisn't\b/g, "is not"], [/\baren't\b/g, "are not"], [/\bdidn't\b/g, "did not"], [/\bhaven't\b/g, "have not"],
+        [/\byou're\b/g, "you are"], [/\bwe're\b/g, "we are"], [/\bthey're\b/g, "they are"]
+      ];
+      function normalize(raw) {
+        var t = String(raw).toLowerCase().replace(/[\u2019\u2018]/g, "'");
+        CONTRACTIONS.forEach(function (p) { t = t.replace(p[0], p[1]); });
+        t = " " + t.replace(/[^a-z0-9$% ]+/g, " ").replace(/\s+/g, " ").trim() + " ";
+        TYPO_FIXES.forEach(function (p) { t = t.replace(p[0], p[1]); });
+        return t;
+      }
+      function has(t) { for (var i = 1; i < arguments.length; i++) { if (t.indexOf(arguments[i]) !== -1) return true; } return false; }
+      function wordIn(t, w) { return t.indexOf(" " + w + " ") !== -1; }
+      function exact(t) { return t.trim(); }
+      function findSize(t) {
+        if (/\b(extra large|xl)\b/.test(t)) return "XL";
+        if (/\blarge\b/.test(t) || wordIn(t, "l")) return "L";
+        if (/\bmedium\b/.test(t) || wordIn(t, "m")) return "M";
+        if (/\bsmall\b/.test(t) || wordIn(t, "s")) return "S";
+        return null;
+      }
+      function findColor(t) { var f = null; BIZ.colors.forEach(function (c) { if (t.indexOf(" " + c.toLowerCase() + " ") !== -1) f = c; }); return f; }
+      function priceStr() { return "$" + BIZ.price; }
+      function colorsList(lower) { var l = BIZ.colors.map(function (c) { return lower ? c.toLowerCase() : c; }); return l.slice(0, -1).join(", ") + ", and " + l[l.length - 1]; }
+      function sizesList() { return BIZ.sizes.slice(0, -1).join(", ") + ", and " + BIZ.sizes[BIZ.sizes.length - 1]; }
+      function done(intent, chips) { ctx.lastIntent = intent; ctx.topic = intent; ctx.unknowns = 0; ctx.fallbackCount = 0; if (chips) ctx.chipSet = chips; }
+
+      /* ================= RESPONSE LIBRARY ================= */
+      var R = {
+        /* ---- SOCIAL ---- */
+        greeting: function () {
+          ctx.greetings++; done("greeting", "greeting");
+          if (ctx.greetings <= 1 && ctx.msgCount <= 1) return "Hey! 👋 Welcome to LUXE WEAR! Thanks for messaging us. I’m here to help with anything you need. 😊\n\nLooking for something new, checking an order, or just have a question? Ask me anything!";
+          var v = ["Hey! 👋 Good to see you here. What can I help you with today?", "Hello! 👋 What would you like to check — products, sizes, shipping, or returns?", "Hi there! 👋 Ask me anything about LUXE WEAR."];
+          return v[(ctx.greetings - 1) % v.length];
+        },
+        goodMorning: function () { done("greeting", "greeting"); return "Good morning! ☀️ Thanks for messaging LUXE WEAR. What can I help you with today?"; },
+        goodNight: function () { done("goodbye", "general"); return "Good night! 🌙 Thanks for chatting with LUXE WEAR. You can message again any time — I’ll be here."; },
+        howAreYou: function () { done("howAreYou", "greeting"); ctx.awaiting = "mood"; return "I’m doing great, thanks for asking! 😊 Ready to help you find something you’ll love. How’s your day going?"; },
+        moodGood: function () { done("mood", "greeting"); ctx.awaiting = null; return "Glad to hear that! 😊 Are you looking for something specific, or just browsing today?"; },
+        moodBad: function () { done("mood", "support"); ctx.awaiting = null; return "I’m sorry to hear that. I hope the rest of your day gets easier. Is there anything about LUXE WEAR I can help take off your plate — an order question, a return, anything?"; },
+        whatDoing: function () { done("casual", "greeting"); return "I’m right here helping LUXE WEAR customers with product, order, and return questions. 😊 What can I do for you?"; },
+        areYouThere: function () { done("available", "greeting"); return "Yes, I’m here! 😊 Send me your question whenever you’re ready."; },
+        generalHelp: function () { done("help", "general"); return "Absolutely! 😊 Tell me what you’re looking for, or choose a topic like products, sizing, shipping, or returns."; },
+        haveQuestion: function () { done("help", "general"); return "Of course — ask away! 😊 I can help with product details, prices, sizing, shipping, tracking, and returns."; },
+        thanks: function () {
+          ctx.thanksCount++; done("thanks", "general");
+          var v = ["You’re very welcome! 😊 Is there anything else I can help you with?", "Anytime! 😊 Happy to help. Anything else you’d like to check?", "You’re welcome! Let me know if you need anything else at all."];
+          return v[(ctx.thanksCount - 1) % v.length];
+        },
+        helpful: function () { done("thanks", "general"); return "I’m glad that helped! 😊 Anything else you’d like to know?"; },
+        apology: function () { done("apology", "general"); return "No worries at all! 😊 How can I help?"; },
+        agreement: function () { done("agreement", "general"); if (ctx.pendingOffer) { var o = ctx.pendingOffer; ctx.pendingOffer = null; return topicReply(o); } return "Great! 😊 What would you like to check next — products, sizes, shipping, or returns?"; },
+        thatsAll: function () { done("goodbye", "general"); return "Perfect! Thanks for chatting with LUXE WEAR. Have a wonderful day! 👋"; },
+        goodbye: function () { done("goodbye", "general"); return "Bye for now! 👋 Thanks for stopping by LUXE WEAR — feel free to message again any time."; },
+        haha: function () { done("casual", "greeting"); return "😊 Glad we’re having a good chat! What can I help you with?"; },
+        browsing: function () { done("browsing", "greeting"); return "No problem! Take your time. 😊 I can help you explore our hoodie, compare colors, or find something that suits your style."; },
+        neverMind: function () { done("casual", "general"); ctx.awaiting = null; ctx.pendingOffer = null; return "No problem at all! 😊 I’m here if anything else comes up."; },
+        confusion: function () { done("confusion", "general"); return "No worries — let me put it simply. 😊 I can answer questions about our hoodie’s price, sizes, and colors, plus shipping, tracking, and returns. Which one would help most?"; },
+        areYouReal: function () { done("realPersonInfo", "support"); return "I’m LUXE WEAR’s automated demo assistant. 😊 I can answer common questions and help you explore our products. If you need a real team member, I can explain how human support would work."; },
+        needClothes: function () { done("whatSell", "price"); return "I’d be happy to help you explore our demo collection! Our featured item is the " + BIZ.product + " for " + priceStr() + ". Would you like to see its colors or check the sizes?"; },
+
+        /* ---- PRODUCTS & SHOPPING ---- */
+        whatSell: function () { done("whatSell", "price"); return "Our featured product in this demo is the " + BIZ.product + " — " + priceStr() + ", in " + colorsList(true) + ", sizes " + sizesList() + ". It’s made from " + BIZ.material + ". Want the price details, colors, or sizes first?"; },
+        recommendStart: function () { done("recommend", "recommend"); ctx.awaiting = "recommend_style"; return "I can help you explore our featured hoodie! 😊 The " + BIZ.product + " costs " + priceStr() + " and comes in " + colorsList(true) + ". Are you looking for everyday wear or something for a particular occasion?"; },
+        recommendSelf: function () { done("recommend", "recommendStyle"); ctx.awaiting = "recommend_style"; return "Got it! 😊 Are you looking for something casual for everyday wear, or something for a particular occasion?"; },
+        recommendGift: function () { done("recommend", "sizes"); ctx.awaiting = "usual_size"; return "Nice! 😊 A hoodie can make a cozy gift. Our featured hoodie — the " + BIZ.product + ", " + priceStr() + " — comes in " + colorsList(true) + ". Do you know the recipient’s usual size?"; },
+        recommendEveryday: function () { done("recommend", "colors"); ctx.awaiting = null; return "Our hoodie could be an option for casual everyday wear. 😊 Would you like to explore colors or check the available sizes?"; },
+        recommendOccasion: function () { done("recommend", "general"); ctx.awaiting = null; return "Got it — for a particular occasion, the " + BIZ.product + " works best as a casual piece. It’s " + priceStr() + " in " + colorsList(true) + ". I don’t have other occasion styles configured in this demo, so I don’t want to invent options."; },
+        price: function () { done("price", "price"); ctx.pendingOffer = "colors"; return "Our " + BIZ.product + " is " + priceStr() + ". 😊 It comes in " + colorsList(true) + ". Do you have a color in mind?"; },
+        availability: function () { done("availability", "sizes"); return "The " + BIZ.product + " is listed in this demo in sizes " + sizesList() + " and colors " + colorsList(true) + ". A listed option isn’t the same as verified stock though — this demo can’t confirm live inventory."; },
+        colors: function () { done("colors", "colors"); ctx.pendingOffer = "sizes"; return "The " + BIZ.product + " comes in " + colorsList(true) + ". Which color are you interested in?"; },
+        sizes: function () { done("sizes", "sizes"); ctx.pendingOffer = null; ctx.awaiting = "usual_size"; return "We list " + sizesList() + ". 😊 Do you already know your usual size?"; },
+        sizeRecommend: function () { done("sizeRecommend", "sizes"); ctx.pendingOffer = null; ctx.awaiting = "usual_size"; return "We list " + sizesList() + ". 😊 What size do you normally wear in similar tops? I don’t have a verified measurement chart, so I can’t guarantee the fit."; },
+        usualSize: function (size) { ctx.awaiting = null; ctx.size = size; done("sizes", "colors"); return "Got it! 😊 We list " + size + " as one of our sizes. Since I don’t have a verified size chart or fit information, I’d recommend checking the store’s size guide before ordering."; },
+        sizeUnsure: function () { ctx.awaiting = null; done("sizes", "sizes"); return "No worries! 😊 You could start by checking the size label on a hoodie you already own and comparing its measurements with the store’s size guide. Unfortunately, the demo doesn’t have a verified measurement chart yet."; },
+        sizeCheck: function (size) { ctx.size = size; done("sizes", "colors"); return size + " is one of the sizes listed for our " + BIZ.product + ". I can’t confirm live stock in this demo, though."; },
+        cheapest: function () { done("price", "price"); return "This demo only has one configured product — the " + BIZ.product + " at " + priceStr() + " — so it’s both our featured item and our most affordable one. I can’t compare prices across a full catalog here, but I can tell you all about the hoodie."; },
+        shipDestination: function () { done("shipping", "shipping"); return "The shipping information in this demo covers standard US delivery, typically 3–5 business days, but it doesn’t verify individual destinations or states. A live store would confirm delivery to your exact address at checkout."; },
+        fastDelivery: function () { done("shipping", "shipping"); return "I can’t promise delivery that fast — the configured shipping information is standard US delivery, typically 3–5 business days, and no express or next-day option is configured in this demo. So delivery tomorrow can’t be guaranteed."; },
+        urgent: function () { done("shipping", "support"); return "I understand the urgency! The only delivery timing configured here is standard US shipping, typically 3–5 business days — there’s no express option in this demo, so I can’t guarantee a faster arrival. A live store could tell you its fastest real option."; },
+        priceObjection: function () { done("price", "price"); ctx.pendingOffer = "material"; return "I understand! The hoodie is listed at " + priceStr() + " in this demo. I don’t have a verified discount available, but I can tell you more about the product before you decide."; },
+        changedMind: function () { done("casual", "general"); ctx.awaiting = null; ctx.pendingOffer = null; return "No problem at all — thanks for letting me know. 😊 Nothing has been ordered or changed in this demo. I’m here if you’d like to look at anything else."; },
+        maybeLater: function () { done("casual", "general"); return "Of course — take your time! 😊 The hoodie will be right here when you’re ready, and I can answer questions whenever you come back."; },
+        fit: function () { done("fit", "sizes"); return "We list sizes " + sizesList() + ". Detailed measurements and fit notes (like whether it runs large or small) aren’t confirmed in this demo, so I can’t give you a size chart I don’t have. A live store would plug its real measurements in here."; },
+        material: function () { done("material", "price"); return "The " + BIZ.product + " is made from " + BIZ.material + ". It’s our featured everyday hoodie in this demo — " + priceStr() + ", sizes " + sizesList() + "."; },
+        quality: function () { done("quality", "price"); return "It’s positioned as our premium everyday hoodie, made from " + BIZ.material + ". Beyond that, specific quality or durability claims aren’t confirmed in this demo, so I’ll keep it honest rather than oversell it."; },
+        care: function () { done("care", "general"); return "Specific washing and care instructions aren’t confirmed in this demo, so I don’t want to invent them. The fabric is " + BIZ.material.replace("a ", "") + " — a live store would share the garment’s actual care label here."; },
+        compare: function () { done("compare", "price"); return "This demo features one product — the " + BIZ.product + " at " + priceStr() + " — so there isn’t a second item configured for me to compare it with. I can walk you through its sizes, colors, and material instead."; },
+        outfit: function () { done("outfit", "general"); return "I’d be happy to help you think it through! 😊 What style or occasion do you have in mind? One honest note: this demo only contains one configured product — the " + BIZ.product + " (" + priceStr() + ", in " + colorsList(true) + ") — a casual piece that pairs naturally with jeans or joggers. A live store could build a full outfit from its real collection."; },
+        gift: function () { return R.recommendGift(); },
+        discount: function () { done("discount", "price"); return "No promotion or coupon code is configured in this demo, so I can’t offer a discount code or pretend a sale is active. The " + BIZ.product + " is listed at " + priceStr() + ". A live store could share its real current offers here."; },
+        sales: function () { done("discount", "price"); return "There’s no sale or promotion configured in this demo right now. The " + BIZ.product + " is listed at its regular demo price of " + priceStr() + "."; },
+        customization: function () { done("customization", "general"); return "Customization (like printing or embroidery) isn’t configured in this demo, so I can’t confirm it’s offered. A live store would confirm its customization options here."; },
+        newArrivals: function () { done("newArrivals", "price"); return "The featured item in this demo is the " + BIZ.product + ". A new-arrivals list isn’t configured here, so I can’t confirm what’s newly added — I don’t want to invent a collection."; },
+        restock: function () { done("restock", "support"); return "Restock dates aren’t confirmed in this demo, and I can’t check live inventory. A live store could share its restock alerts or waitlist here."; },
+        whereToBuy: function () { done("whereToBuy", "general"); return "This demo isn’t connected to a live checkout or product page, so I can’t share a working purchase link. In a live store, this is exactly where I’d send you the product link for the " + BIZ.product + " (" + priceStr() + ")."; },
+        buyIntent: function () { done("buy", "price"); return "Great — I can help you explore it! The " + BIZ.product + " is " + priceStr() + ", in " + colorsList(true) + ", sizes " + sizesList() + ". This demo doesn’t take orders or payments, but in a live store this is where checkout would begin."; },
+        sizePick: function (size) { ctx.size = size; done("sizes", "colors"); return BIZ.sizeNames[size] + " (" + size + ") is one of our listed sizes. 😊 This demo can’t verify live stock for it. Would you like to know about colors or shipping?"; },
+        colorPick: function (color) { ctx.color = color; done("colors", "sizes"); return color + " is one of our listed colors. 😊 Would you like to know about sizes or shipping?"; },
+        sizeColorPick: function (size, color) { ctx.size = size; ctx.color = color; done("colors", "shipping"); return color + " is one of our listed colors, and " + size + " is one of our listed sizes. I can explain the product and shipping options, but I can’t verify live stock in this demo."; },
+
+        /* ---- ORDERS & DELIVERY ---- */
+        shippingCost: function () { done("shippingCost", "shipping"); return "The delivery estimate is 3–5 business days. The exact shipping cost hasn’t been configured in this demo, so I don’t want to give you an incorrect amount."; },
+        shippingTime: function () { done("shipping", "shipping"); return BIZ.shippingTime + ". That’s a typical estimate rather than a guaranteed delivery date."; },
+        international: function () { done("international", "shipping"); return "International shipping isn’t confirmed in this demo — the configured estimate covers standard US shipping (typically 3–5 business days). A live store would confirm the countries it ships to here."; },
+        trackingStart: function () { done("tracking", "tracking"); ctx.awaiting = "order_has_number"; return "I can explain how tracking works. 😊 Do you already have an order number?"; },
+        trackingHasNumber: function () { done("tracking", "support"); ctx.awaiting = null; return "You would normally enter your order number into the store’s tracking system. This demo isn’t connected to real orders, so I can’t retrieve an actual shipment status."; },
+        trackingNoNumber: function () { done("tracking", "support"); ctx.awaiting = null; return "No problem. In a live store, your order number is usually in your confirmation email. This demo isn’t connected to real orders, so I can’t look one up — but that’s where you’d find it."; },
+        trackingNumberGiven: function () { return R.trackingHasNumber(); },
+        orderConfirmation: function () { done("orderConfirmation", "support"); return "Order confirmations aren’t something this demo can check — it isn’t connected to a real order system. In a live store, a confirmation would normally arrive by email after checkout, and I could help you find it."; },
+        notReceived: function () { done("notReceived", "support"); return "I’m sorry your order hasn’t arrived. Standard US shipping typically takes 3–5 business days, so if it’s been longer than that, a real store would review the order and tracking with you. This demo can’t check a real shipment, but I can explain how human support would help."; },
+        lateDelivery: function () { done("lateDelivery", "support"); return "I’m sorry for the delay — that’s frustrating. The configured estimate is 3–5 business days, but it isn’t a guaranteed date. A real store would check the shipment status for you; this demo isn’t connected to a carrier or order system."; },
+        changeOrder: function () { done("changeOrder", "support"); return "Order changes aren’t something this demo can make — it isn’t connected to real orders. In a live store, changes usually need to happen quickly after ordering, and support would confirm what’s possible for your order."; },
+        cancelOrder: function () { done("cancelOrder", "support"); return "I can’t cancel a real order in this demo, since it isn’t connected to an order system. In a live store, support would check whether your order can still be cancelled before it ships."; },
+        changeAddress: function () { done("changeAddress", "support"); return "I can’t update a delivery address here — this demo isn’t connected to real orders, and I shouldn’t collect address details in chat. In a live store, support would verify the order and confirm whether the address can still be changed."; },
+        missingItem: function () { done("missingItem", "support"); return "I’m sorry an item is missing — that’s not the experience we want. A real store would review your order and shipment to sort it out. This demo can’t open a case, but I can explain how human support would take it from here."; },
+        wrongItem: function () { done("wrongItem", "returns"); return "I’m sorry you received the wrong item. Eligible unworn items can be returned within 30 days under the demo policy, and a real store would arrange the correct item or next step with you. I can’t start that process here, but I can explain the return policy."; },
+        damagedItem: function () { done("damaged", "support"); return "I’m really sorry your order arrived damaged. A real store would review the order with you and explain the replacement or return options. This demo can’t open a case or check the order, but I can walk you through how human support would help."; },
+
+        /* ---- RETURNS & PAYMENTS ---- */
+        returns: function () { done("returns", "returns"); return BIZ.returns + ". I can explain the policy here, but this demo can’t start an actual return — a live store would handle that step with its team."; },
+        exchange: function () { done("exchange", "returns"); return "Exchanges follow the same demo return window: eligible unworn items within 30 days, subject to the store’s return policy. This demo can’t start an exchange or check stock for a replacement size."; },
+        refundTiming: function () { done("refundTiming", "returns"); return "Refund timing isn’t configured in this demo, so I can’t give you an exact number of days. What I can confirm is the return window: eligible unworn items within 30 days. A live store would confirm its real refund timelines here."; },
+        paymentMethods: function () { done("payment", "general"); return "Payment options haven’t been configured in this demo, so I can’t confirm whether cash, cards, or other methods are accepted — and this demo can’t process payments. A live store would confirm its accepted payment methods at checkout. Please never share card numbers or passwords in chat."; },
+        paymentFailure: function () { done("paymentFailure", "support"); return "I’m sorry the payment didn’t go through. This demo can’t view or retry transactions. In a live store, common next steps are checking the card details and trying again, or contacting support if it keeps failing — never share your full card number in chat."; },
+        duplicatePayment: function () { done("duplicatePayment", "support"); return "I understand the concern — being charged twice would be worrying. This demo can’t view transactions or issue refunds. A real store’s support team would review the charges with you, so human support is the right next step for that."; },
+        giftCard: function () { done("giftCard", "general"); return "Gift cards aren’t configured in this demo, so I can’t confirm balances or whether they’re sold. A live store would confirm its gift card options here."; },
+        receipt: function () { done("receipt", "support"); return "This demo isn’t connected to real orders, so I can’t retrieve a receipt or invoice. In a live store, receipts usually arrive by email after purchase, and support could resend one."; },
+
+        /* ---- SUPPORT & TRUST ---- */
+        hours: function () { done("hours", "support"); return "Our support hours are " + BIZ.hours + ". You can message any time — automated replies like mine run around the clock in this demo."; },
+        contact: function () { done("contact", "support"); return "A contact email or phone number isn’t configured in this demo, so I can’t share one without inventing it. Support hours here are " + BIZ.hours + ", and this chat is the demo’s support channel."; },
+        human: function () { done("human", "support"); ctx.awaiting = null; return "Of course! A live business could connect this chat to its support team — during hours (" + BIZ.hours + ") or with a follow-up outside them. This demo can’t contact a real employee, but this is how the handoff would begin."; },
+        complaint: function () { done("complaint", "support"); return "I’m sorry you’ve had a bad experience — thank you for telling us. I can help right away with product, shipping, or return information, and in a live store I could route your message to the support team. What happened?"; },
+        frustrated: function () { done("frustrated", "support"); return "I completely understand the frustration, and I’m sorry. Let’s sort this out — tell me what went wrong, and I’ll help with what I can here or explain how human support would step in."; },
+        privacy: function () { done("privacy", "general"); return "Good question. This demo runs entirely in your browser — it doesn’t send your messages anywhere or store personal information. You should never share passwords or full payment details in a support chat."; },
+        security: function () { done("security", "general"); return "This demo page doesn’t process payments or connect to real accounts, so there’s nothing sensitive being handled here. In a live store, payments would happen through its secure checkout — never through chat."; },
+
+        whoAreYou: function () { done("identity", "general"); return "I’m the LUXE WEAR demo assistant — an automated helper for this clothing-store demo. 😊 I can answer questions about our hoodie, sizes, colors, shipping, and returns."; },
+        whatCanYouDo: function () { done("capabilities", "general"); return "I can help with product details, prices, sizes and colors, shipping times, order-tracking guidance, returns and exchanges, and support questions. 😊 And I’ll always tell you honestly when something isn’t configured in this demo instead of guessing."; },
+        youreWelcome: function () { done("thanks", "general"); return "Of course — happy to help any time! 😊"; },
+        stockColor: function (color) { ctx.color = color; done("availability", "sizes"); return color + " is one of the listed colors, but I can’t check live inventory in this demo. A connected store could use its real stock information to answer that."; },
+        unknownProduct: function (item) { done("unknownProduct", "price"); return "This demo only has information about our " + BIZ.product + ", so I can’t confirm whether the store sells " + item + ". I don’t want to invent products that may not exist."; },
+        gibberish: function () { ctx.lastIntent = "unknown"; ctx.topic = "unknown"; ctx.chipSet = "general"; ctx.fallbackCount++; return "Sorry, I couldn’t understand that message. Could you rephrase it for me? You can ask about products, sizes, colors, prices, shipping, or returns."; },
+        repeatComplaint: function () { done("frustration", "support"); return "You’re right to point that out — sorry about that. Let me try a different approach. Could you explain what you’re trying to accomplish? I’ll answer what I can and be clear about anything I can’t verify."; },
+        notAsAsked: function () { done("frustration", "support"); return "You’re right — sorry, that wasn’t what you asked. Let me reset and focus. 😊 Could you tell me in a few words what you’d like to know? I can help with the product, sizes, colors, price, shipping, tracking, or returns."; },
+        notHelping: function () { done("frustration", "support"); return "I’m sorry I haven’t been helpful enough. Let me try another way. 😊 Could you tell me a little more about what you need? If it’s something I can’t answer, I’ll tell you honestly rather than leave you without a response."; },
+        uselessComplaint: function () { done("frustration", "support"); return "I hear you, and I’m sorry this hasn’t been useful so far. Let’s try a simpler route: tell me the one thing you need most — the hoodie, sizes, shipping, a return, or tracking guidance — and I’ll answer it directly."; },
+        alreadyTold: function () { done("frustration", "general"); return "You’re right — sorry, I should have caught that the first time. Thanks for your patience. 😊 What would you like to do next?"; },
+        needHelpNow: function () { done("frustrated", "support"); return "I hear you — let’s get straight to it. Tell me what’s going on in a sentence or two, and I’ll help with what I can right away. If it needs a real team member, I’ll explain honestly how a live store would route it, since this demo can’t contact one."; },
+        insistence: function () { ctx.lastIntent = "unknown"; ctx.topic = "unknown"; ctx.chipSet = "general"; return "I understand you’re looking for a specific answer. I still can’t verify that information here, so I don’t want to guess. I can explain what this demo does know, or show you how a real store could connect this question to its support team."; },
+
+        /* ---- FALLBACKS ---- */
+        clarify: function () { done("clarify", "general"); return "Just to make sure I point you the right way — are you asking about a size, a color, the price, shipping, or returns?"; },
+        tellMore: function () {
+          done(ctx.topic || "general", ctx.chipSet);
+          switch (ctx.topic) {
+            case "price": return "Of course — the " + BIZ.product + " is " + priceStr() + ", in " + colorsList(true) + ", sizes " + sizesList() + ". It’s made from " + BIZ.material + ". Anything specific you’d like to dig into?";
+            case "shipping": case "shippingCost": return "Sure — standard US shipping typically takes 3–5 business days. The exact shipping cost isn’t configured in this demo. Returns are a separate topic if you’d like that next.";
+            case "returns": return "Sure — the key point is the 30-day window for eligible unworn items. Refund timing and return shipping costs aren’t configured in this demo, so a live store would confirm those.";
+            case "sizes": case "sizeRecommend": case "fit": return "Sure — the listed sizes are " + sizesList() + ". I don’t have confirmed measurements in this demo, which is why I won’t guess an exact fit.";
+            case "colors": return "Sure — the listed colors are " + colorsList(true) + ". " + (ctx.color ? "You were looking at " + ctx.color.toLowerCase() + ". " : "") + "Anything else about them?";
+            default: return "Of course! I can go deeper on the hoodie’s price, sizes, colors, and material, or on shipping and returns. Which would help most?";
+          }
+        },
+        unrelated: function () { done("unrelated", "general"); return "I can’t reliably answer that from this clothing-store demo. 😊 I can help with LUXE WEAR products and customer-service questions, though. What would you like to know?"; },
+        unknown: function () { return getFallbackResponse("", ctx, ctx.fallbackCount); }
+      };
+
+      /* ================= FALLBACK & RECOVERY (never go silent) =================
+         getFallbackResponse(message, context, recentFallbackCount) always
+         returns a valid reply: it acknowledges the message, admits what is
+         not configured, offers a next step, and rotates wording using the
+         recent fallback count so it never repeats itself verbatim. */
+      function getFallbackResponse(message, context, recentFallbackCount) {
+        var count = (typeof recentFallbackCount === "number" ? recentFallbackCount : 0);
+        var mt = normalize(message || "");
+        context.fallbackCount = count + 1;
+        context.lastIntent = "unknown"; context.topic = "unknown"; context.chipSet = "general";
+        if (has(mt, " size ", " sizing ", " fit ", " measure")) return "I’m not sure which sizing detail you mean. Are you asking about available sizes, measurements, or help choosing a size? We list " + sizesList() + ".";
+        if (has(mt, " deliver", " ship", " postage ", " carrier ")) return "I don’t have that particular delivery detail configured. I can confirm that the demo lists standard US shipping as typically 3–5 business days.";
+        if (has(mt, " policy ", " warranty ", " guarantee ", " insurance ", " loyalty ")) return "I can’t confirm that policy from the information available here. I don’t want to give you an incorrect answer. The policies I do know are the 30-day return window for eligible unworn items and support hours of " + BIZ.hours + ".";
+        var variants = [
+          "That’s a good question! 😊 I don’t have enough information to answer that accurately in this demo, and I don’t want to give you the wrong answer. I can still help with our product, sizes, colors, prices, shipping, and returns. Would you like help with one of those?",
+          "Let me clarify that for you. 😊 I don’t have that specific information in this demo, but I can help with the product, sizes, colors, price, shipping, or returns.",
+          "I want to be straight with you: that detail isn’t in the information this demo has, so I’d rather not guess. Here’s what I can do — walk you through the hoodie, its sizes and colors, shipping, or returns. Which would help?",
+          "That one is still outside what I can verify here. A real store could connect this question to its support team; in this demo, I can explain what is configured — the " + BIZ.product + " (" + priceStr() + "), sizes " + sizesList() + ", and the 30-day return policy."
+        ];
+        var idx = count % variants.length;
+        var text = variants[idx];
+        if (text === context.lastFallbackText) text = variants[(idx + 1) % variants.length];
+        context.lastFallbackText = text;
+        return text;
+      }
+      /* Gibberish: no common English words, and a token with a long
+         consonant run or (for 3+ letters) no vowel at all. A recognized
+         size/color or any digit (order numbers) rules it out upstream. */
+      function isGibberish(normText, original) {
+        if (/[0-9]/.test(original)) return false;
+        var tokens = normText.trim().split(" ").filter(Boolean);
+        if (!tokens.length) return false;
+        var common = " the a an i you it is are was do does did can could will would should what how why when where who which this that and or to of for in on at me my we they he she am have has had not no yes ok okay hi hello hey thanks thank please want need know like get got one two about with from your our their his her its ";
+        for (var i = 0; i < tokens.length; i++) { if (common.indexOf(" " + tokens[i] + " ") !== -1) return false; }
+        for (var j = 0; j < tokens.length; j++) {
+          var tk = tokens[j];
+          if (/[bcdfghjklmnpqrstvwxz]{4,}/.test(tk)) return true;
+          if (tk.length >= 3 && !/[aeiou]/.test(tk)) return true;
+        }
+        return false;
+      }
+      var OTHER_PRODUCTS = ["leather jacket", "jacket", "jeans", "sneakers", "shoes", "shoe", "dress", "pants", "trousers", "hat", "cap", "socks", "gloves", "scarf", "sweater", "coat", "boots", "sandals", "backpack", "sunglasses", "belt", "shorts", "skirt", "leggings", "suit", "tie", "bag", "perfume", "watch"];
+      function findOtherProduct(t) {
+        for (var i = 0; i < OTHER_PRODUCTS.length; i++) {
+          var p = OTHER_PRODUCTS[i];
+          if (t.indexOf(" " + p + "s ") !== -1) return p + "s";
+          if (t.indexOf(" " + p + " ") !== -1) return p;
+        }
+        return null;
+      }
+
+      function topicReply(topic) {
+        switch (topic) {
+          case "sizes": return R.sizes();
+          case "colors": return R.colors();
+          case "shipping": return R.shippingTime();
+          case "price": return R.price();
+          case "returns": return R.returns();
+          case "material": return R.material();
+          default: return R.generalHelp();
+        }
+      }
+
+      /* ================= INTENT PIPELINE ================= */
+      function generateReply(raw) {
+        var original = String(raw).trim();
+        var t = normalize(original);
+        var e = exact(t);
+        ctx.msgCount++;
+        var repeated = (ctx.lastUserNorm === e);
+        if (repeated) ctx.repeatCount++; else ctx.repeatCount = 0;
+        ctx.lastUserNorm = e;
+
+        var size = findSize(t);
+        var color = findColor(t);
+        var shortMsg = original.replace(/\s+/g, " ").length <= 42;
+
+        /* --- Never-silent guards: gibberish, meta-unknown, insistence --- */
+        if (!size && !color && isGibberish(t, original)) return R.gibberish();
+        if (has(t, " something you do not know ", " something you do not have information about ", " tell me something you do not know ", " what do you not know ", " something you cannot answer ", " a question you cannot answer ", " you do not know the answer ")) return getFallbackResponse(original, ctx, 0);
+        if (has(t, " exact answer anyway ", " answer anyway ", " tell me anyway ", " just guess ", " give me the exact answer ", " i want the exact answer ")) return R.insistence();
+
+        /* --- Awaiting follow-ups (highest priority, but a clear new topic wins) --- */
+        var clearNewTopic = has(t, " return ", " refund ", " ship", " deliver", " price ", " cost ", " discount ", " coupon ", " human ", " agent ", " hour ", " damaged ", " cancel ", " exchange ");
+        if (ctx.awaiting === "order_has_number" && !clearNewTopic) {
+          if (/^(yes|yeah|yep|sure|i do|i have one|yes i do)/.test(e)) return R.trackingHasNumber();
+          if (/^(no|nope|i do not|do not have|no i do not)/.test(e)) return R.trackingNoNumber();
+          if (/[0-9]/.test(original) && original.length <= 28) return R.trackingNumberGiven();
+          ctx.awaiting = null; // changed subject — fall through
+        } else if (ctx.awaiting === "order_has_number" && clearNewTopic) {
+          ctx.awaiting = null;
+        }
+        if (ctx.awaiting === "recommend_who" && !clearNewTopic) {
+          if (has(t, " myself ", " for me ", " mine ") || e === "myself" || e === "for myself" || e === "me") return R.recommendSelf();
+          if (has(t, " gift ", " friend ", " partner ", " mom ", " mum ", " dad ", " brother ", " sister ", " someone else ", " birthday ") || e === "as a gift" || e === "a gift") return R.recommendGift();
+        }
+        if (ctx.awaiting === "recommend_style" && !clearNewTopic) {
+          if (has(t, " everyday ", " casual ", " daily ", " regular ") || e === "everyday") return R.recommendEveryday();
+          if (has(t, " occasion ", " party ", " event ", " date ", " formal ", " particular ")) return R.recommendOccasion();
+          if (has(t, " myself ", " for me ", " mine ") || e === "for myself" || e === "myself") { ctx.awaiting = "recommend_style"; done("recommend", "recommendStyle"); return "Got it — for yourself! 😊 Are you looking for something casual for everyday wear, or something for a particular occasion?"; }
+          if (has(t, " gift ", " friend ", " partner ", " someone else ") || e === "as a gift" || e === "a gift") return R.recommendGift();
+        }
+        if (ctx.awaiting === "mood") {
+          if (has(t, " i am good ", " i am great ", " i am fine ", " i am well ", " i am okay ", " i am ok ", " good ", " great ", " fine ") && e.length <= 24) { ctx.awaiting = null; return R.moodGood(); }
+          if (has(t, " not good ", " tired ", " sad ", " bad ", " stressed ", " sick ") && e.length <= 30) { ctx.awaiting = null; return R.moodBad(); }
+          ctx.awaiting = null;
+        }
+
+        if (ctx.awaiting === "usual_size" && !clearNewTopic) {
+          var asksAvailability = has(t, " do you have ", " available ", " in stock ", " do you sell ");
+          if (size && !asksAvailability) return R.usualSize(size);
+          if (has(t, " do not know ", " not sure ", " no idea ", " idk ") || e === "no" || e === "nope") return R.sizeUnsure();
+          if (/^(yes|yeah|yep)$/.test(e)) return "Great — which size do you usually wear? 😊";
+          ctx.awaiting = null; // changed subject — fall through
+        } else if (ctx.awaiting === "usual_size") { ctx.awaiting = null; }
+
+        /* --- Multi-question messages: answer each supported part --- */
+        var wantsPrice = has(t, " price ", " cost ", " how much is ", " how much does ");
+        var wantsShipTime = has(t, " shipping take ", " delivery take ", " long does shipping ", " long does delivery ", " shipping time ", " delivery time ");
+        var wantsReturns = has(t, " return ", " returns ", " refund ");
+        if (wantsPrice && wantsShipTime && has(t, " and ")) { done("price", "shipping"); return "Two answers in one! 😊 The " + BIZ.product + " is " + priceStr() + ". And standard US shipping typically takes 3–5 business days — the exact shipping charge isn’t configured in this demo."; }
+        if (wantsShipTime && wantsReturns && has(t, " and ")) { done("shipping", "returns"); return "Of course — both! 😊 " + BIZ.shippingTime + ". And for returns: eligible unworn items can be returned within 30 days, subject to the demo’s return policy."; }
+
+        /* --- Frustration & recovery: acknowledge, then change approach --- */
+        if (has(t, " keep repeating ", " repeating yourself ", " repeating the same ", " same answer again ", " you already said that ", " stop repeating ")) return R.repeatComplaint();
+        if (has(t, " not what i asked ", " not what i meant ", " that is not my question ", " you did not answer ", " did not answer my question ", " not the answer i ", " wrong answer ")) return R.notAsAsked();
+        if (has(t, " you are not helping ", " are not helping me ", " not helping me ", " you are not helpful ", " not helpful at all ", " you do not help ")) return R.notHelping();
+        if (has(t, " this is useless ", " so useless ", " completely useless ", " you are useless ", " waste of time ", " wasting my time ")) return R.uselessComplaint();
+        if (has(t, " i already told you ", " already told you ", " i told you already ", " i already said ", " as i already said ", " told you that already ")) return R.alreadyTold();
+        if (has(t, " i need help now ", " help me now ", " need help right now ", " help right now ", " i need help immediately ")) return R.needHelpNow();
+        if (has(t, " you do not understand ", " you are not understanding ", " do not understand me ", " you misunderstood ", " you are misunderstanding ")) return R.notAsAsked();
+
+        /* --- Customer states their usual size, in their own words --- */
+        if (size && has(t, " normally wear ", " usually wear ", " typically wear ", " generally wear ", " i wear ", " my usual size ", " my size is ", " i am a ", " i am an ", " i take ", " usual size is ", " wear a ", " usually a ", " normally a ", " typically a ", " usually an ", " i am usually ", " i am normally ")) return R.usualSize(size);
+
+        /* --- Bare / combined size & color picks --- */
+        var mentionsTopicWord = has(t, " size ", " sizes ", " color ", " colors ", " price ", " cost ", " much ", " ship", " deliver", " return", " refund", " exchange ", " track ", " discount ", " coupon ", " pay ", " hour ", " open ", " material ", " fabric ", " stock ", " available ");
+        if (size && color && shortMsg && !has(t, " price ", " cost ", " much ", " ship", " return")) return R.sizeColorPick(size, color);
+        if (size && shortMsg && !mentionsTopicWord && !has(t, " what ", " do you ", " have ")) return R.sizePick(size);
+        if (color && shortMsg && !mentionsTopicWord) return R.colorPick(color);
+
+        /* --- Short follow-ups: how much / tell me more / why / really --- */
+        if (/^(and )?how much( is it| does it cost)?$/.test(e)) {
+          if (ctx.topic === "shipping" || ctx.topic === "shippingCost" || ctx.topic === "international") return R.shippingCost();
+          return R.price();
+        }
+        if (/^(tell me more|more details|explain|can you explain|why|really|is that so|go on)$/.test(e) || has(t, " tell me more ", " can you explain ", " know more ", " want to know more ", " more info ", " more information ", " learn more ", " more about it ")) return R.tellMore();
+        if (/^(that one|this one|that|it)$/.test(e)) return R.clarify();
+        if (/^(what about|how about|and) (the )?(delivery|shipping)$/.test(e)) return R.shippingTime();
+        if (/^(what about|how about|and) (the )?price$/.test(e)) return R.price();
+        if (/^(what about|how about|and) returns?$/.test(e)) return R.returns();
+        if (e === "how long") { if (ctx.topic === "returns" || ctx.topic === "refundTiming") return R.refundTiming(); return R.shippingTime(); }
+        if (e === "can i get it" || e === "can i get one" || e === "can i buy it") return R.buyIntent();
+        if (e === "what about that one" || e === "how about that one") return R.clarify();
+        if (e === "for myself" || e === "myself") return R.recommendSelf();
+        if (e === "everyday" || e === "casual") return R.recommendEveryday();
+
+        /* --- Yes / No against a pending offer --- */
+        if (/^(yes|yeah|yep|sure|yes please|sounds good)$/.test(e)) {
+          if (ctx.pendingOffer) { var o = ctx.pendingOffer; ctx.pendingOffer = null; return topicReply(o); }
+          done("agreement", "general"); return "Great! 😊 What would you like to check — the price, sizes, colors, shipping, or returns?";
+        }
+        if (/^(no|nope|nah|no thanks|not really)$/.test(e)) {
+          ctx.pendingOffer = null; done("disagreement", "general");
+          return "No problem at all. 😊 If anything else comes up — price, sizes, colors, shipping, or returns — I’m right here.";
+        }
+        if (e === "no that is all" || e === "no thats all" || e === "that is all" || e === "thats all" || e === "nothing else") return R.thatsAll();
+
+        /* ================= SOCIAL LAYER (short/exact first) ================= */
+        if (/^(good morning|morning)$/.test(e) || has(t, " good morning ")) return R.goodMorning();
+        if (/^(good night)$/.test(e)) return R.goodNight();
+        if (/^(good afternoon|good evening)$/.test(e)) { done("greeting", "greeting"); return "Good " + (e.indexOf("evening") !== -1 ? "evening" : "afternoon") + "! 👋 What can I help you with today?"; }
+        if (/^(hi|hello|hey|heyy|hii|yo|hiya|hey there|hello there|hi there)$/.test(e)) return R.greeting();
+        if (has(t, " how are you ", " how is it going ", " how are things ", " how do you feel ", " how are u ") || e === "how are you") return R.howAreYou();
+        if (/^(i am good|i am great|i am fine|i am well|good thanks|great thanks|i am okay|i am ok|doing good|doing well|pretty good|not bad)$/.test(e)) return R.moodGood();
+        if (has(t, " what are you doing ", " what you doing ", " are you busy ")) return R.whatDoing();
+        if (has(t, " are you there ", " anyone there ", " is anyone there ", " you there ", " are you available ", " are you online ", " are you open now ") && !has(t, " size ", " color ", " stock ")) return R.areYouThere();
+        if (has(t, " are you a real person ", " are you real ", " are you a bot ", " are you a robot ", " are you human ", " are you ai ", " are you a person ", " are you an actual person ")) return R.areYouReal();
+        if (has(t, " who are you ", " what is your name ", " your name ")) return R.whoAreYou();
+        if (has(t, " what can you do ", " what do you do ", " what else can you do ", " how can you help ", " what are you able to do ")) return R.whatCanYouDo();
+        if (has(t, " you are welcome ") && e.length <= 26) return R.youreWelcome();
+        if (/^(haha|hahaha|lol|lmao|hehe)$/.test(e)) return R.haha();
+        if (has(t, " just browsing ", " just looking ", " just checking ", " only browsing ", " browsing ") && e.length <= 30) return R.browsing();
+        if (/^(thank you|thanks|thanks a lot|thank you so much|thanks so much|thx|ty)$/.test(e) || (has(t, " thank ") && e.length <= 30)) return R.thanks();
+        if (has(t, " that is helpful ", " thats helpful ", " that was helpful ", " very helpful ", " helpful thanks ") || e === "helpful") return R.helpful();
+        if (/^(sorry|i am sorry|my bad|apologies)$/.test(e) || has(t, " sorry about ")) return R.apology();
+        if (/^(never mind|nevermind|forget it|no worries)$/.test(e)) return R.neverMind();
+        if (has(t, " changed my mind ", " change my mind ", " no longer want ", " decided against it ", " do not want it anymore ", " do not want it now ")) return R.changedMind();
+        if (/^(maybe later|later|not now|not yet|another time|let me think|let me think about it|i will think about it|i need to think|think about it)$/.test(e)) return R.maybeLater();
+        if (has(t, " that sounds good ", " sounds good to me ", " that sounds great ", " sounds great to me ") && e.length <= 34) return R.agreement();
+        if (has(t, " i do not understand ", " do not understand ", " i am confused ", " confused ", " what do you mean ", " i do not get it ", " not sure what you mean ")) return R.confusion();
+        if (has(t, " can i ask you something ", " can i ask a question ", " i have a question ", " i have one question ", " quick question ", " one question ")) return R.haveQuestion();
+        if (/^(ok|okay|cool|nice|great|perfect|awesome|sounds good|alright|fine)$/.test(e)) return R.agreement();
+        if (/^(bye|goodbye|see you|see ya|see you later|gtg|got to go|bye bye)$/.test(e) || has(t, " see you ")) return R.goodbye();
+        if (has(t, " can you help ", " help me ", " i need help ", " need help ", " can you help me ")) {
+          if (!has(t, " find ", " product ", " size ", " ship", " return", " outfit ", " choose ", " recommend ")) return R.generalHelp();
+        }
+
+        /* ================= SUPPORT & ORDERS (priority over shopping keywords) ================= */
+        if (has(t, " real person ", " human ", " agent ", " representative ", " talk to someone ", " speak to someone ", " speak to a human ", " talk to a human ", " live person ", " actual person ", " customer service ", " real support ", " someone real ")) return R.human();
+        if (has(t, " frustrated ", " frustration ", " furious ", " livid ") || (has(t, " angry ", " upset ") && has(t, " i am ", " so ", " very ", " really "))) return R.frustrated();
+        if (has(t, " complaint ", " complain ", " terrible ", " awful ", " horrible ", " worst ", " ridiculous ", " unacceptable ", " disappointing ", " disappointed ", " bad experience ", " poor service ", " scam ")) return R.complaint();
+        if (has(t, " damaged ", " broken ", " ripped ", " torn ", " defective ", " stained ", " arrived damaged ", " came damaged ")) return R.damagedItem();
+        if (has(t, " wrong item ", " wrong product ", " wrong hoodie ", " wrong color ", " wrong size was sent ", " sent me the wrong ", " received the wrong ")) return R.wrongItem();
+        if (has(t, " missing item ", " missing items ", " item missing ", " missing from my order ", " did not receive my item ", " part of my order is missing ", " incomplete order ")) return R.missingItem();
+        if (has(t, " charged twice ", " double charged ", " duplicate charge ", " duplicate payment ", " charged two times ", " billed twice ")) return R.duplicatePayment();
+        if (has(t, " payment failed ", " card declined ", " payment declined ", " payment did not go through ", " cannot pay ", " payment error ", " declined my card ")) return R.paymentFailure();
+        if (has(t, " change my address ", " change the address ", " wrong address ", " update my address ", " new address ", " delivery address ", " shipping address ") && has(t, " change ", " update ", " wrong ", " new ", " my ")) return R.changeAddress();
+        if (has(t, " cancel my order ", " cancel the order ", " cancel order ", " cancellation ", " i want to cancel ")) return R.cancelOrder();
+        if (has(t, " change my order ", " change the order ", " modify my order ", " edit my order ", " change an order ", " change order ")) return R.changeOrder();
+        if (has(t, " late delivery ", " delivery is late ", " order is late ", " package is late ", " still waiting ", " delayed ", " taking too long ") && has(t, " order ", " deliver", " ship", " package ", " it ", " my ")) return R.lateDelivery();
+        if (has(t, " not received ", " have not received ", " never arrived ", " did not arrive ", " has not arrived ", " my order did not come ", " package never came ", " have not gotten my order ")) return R.notReceived();
+        if (has(t, " refund timing ", " how long do refunds ", " how long does a refund ", " when will i get my refund ", " when do i get my refund ", " refund take ", " how long for a refund ", " refund time ", " refund status ")) return R.refundTiming();
+        if (has(t, " exchange ", " swap ") || (has(t, " different size ") && has(t, " want ", " need ", " get "))) return R.exchange();
+        if (has(t, " return ", " returns ", " refund ", " send it back ", " send back ", " money back ", " return policy ", " return it ", " returning ")) return R.returns();
+        if (has(t, " order confirmation ", " confirmation email ", " confirm my order ", " did my order go through ", " order confirmed ", " received my order confirmation ", " my order go through ")) return R.orderConfirmation();
+        if (has(t, " track ", " tracking ", " where is my order ", " where is my package ", " order status ", " order number ", " track my order ", " check my order ", " shipment status ")) return R.trackingStart();
+        if (has(t, " international ", " outside the us ", " outside usa ", " ship to canada ", " ship to uk ", " ship abroad ", " another country ", " other countries ", " worldwide ")) return R.international();
+        if ((has(t, " how much ", " cost ", " charge ", " fee ", " price ") && has(t, " ship", " deliver")) || has(t, " shipping cost ", " shipping fee ", " shipping charge ", " delivery cost ", " delivery fee ", " cost of shipping ", " how much is shipping ", " how much for shipping ", " how much does shipping ")) return R.shippingCost();
+        if (has(t, " privacy ", " my data ", " personal information ", " store my ", " keep my data ")) return R.privacy();
+        if (has(t, " secure ", " security ", " is it safe ", " is this safe ", " safe to buy ", " safe to order ", " legit ")) return R.security();
+        if (has(t, " gift card ", " gift cards ", " gift certificate ", " gift voucher ")) return R.giftCard();
+        if (has(t, " receipt ", " invoice ", " proof of purchase ", " order receipt ")) return R.receipt();
+        if (has(t, " email address ", " phone number ", " contact information ", " contact info ", " contact details ", " how can i contact ", " contact you ", " your email ", " your phone ")) return R.contact();
+        if (has(t, " opening hours ", " support hours ", " business hours ", " when are you open ", " what are your hours ", " your hours ", " when do you close ", " when do you open ") || e === "hours") return R.hours();
+        if (has(t, " payment method ", " payment options ", " how can i pay ", " how do i pay ", " accept cards ", " accept paypal ", " pay with ", " methods of payment ", " payment ", " credit card ", " debit card ", " paypal ", " venmo ", " apple pay ", " pay cash ", " in cash ", " cash ", " cash on delivery ", " accept cash ", " pay by card ", " pay by cash ", " can i pay ", " pay using ") && !has(t, " failed ", " declined ", " twice ", " my order ")) return R.paymentMethods();
+
+        /* ================= PRODUCTS & SHOPPING ================= */
+        if (has(t, " cake ", " cakes ", " pizza ", " burger ", " groceries ", " electronics ", " laptop ", " computer ", " flight ", " hotel ", " concert ticket ", " birthday cake", " football ", " soccer ", " basketball ", " cricket ", " tennis ", " who will win ", " who won ", " weather ", " forecast ", " stock price ", " bitcoin ", " lottery ")) return R.unrelated();
+        if (has(t, " cheapest ", " lowest price ", " least expensive ", " most affordable ", " budget friendly ", " budget option ")) return R.cheapest();
+        if (has(t, " everyday wear ", " for everyday ", " casual wear ", " daily wear ", " something for everyday ", " everyday use ")) return R.recommendEveryday();
+        if (has(t, " recommend ", " recommendation ", " suggestion ", " suggest ", " what should i buy ", " what should i get ") || e === "what do you recommend" || has(t, " do you recommend ")) return R.recommendStart();
+        if (has(t, " help me find ", " find something ", " find me something ", " looking for something ", " find something for me ") && !has(t, " order ", " size ")) return R.recommendStart();
+        if (has(t, " gift for ", " gift idea ", " as a gift ", " buying a gift ", " present for ", " for my friend ", " for my partner ", " for a gift ", " it is a gift ", " this is a gift ") && !has(t, " card ")) return R.gift();
+        if (has(t, " outfit ", " what goes with ", " wear with ", " style it ", " match with ", " pair with ")) return R.outfit();
+        if (has(t, " compare ", " comparison ", " difference between ", " vs ", " versus ", " better than ")) return R.compare();
+        if (has(t, " new arrivals ", " new arrival ", " new products ", " newly added ", " latest products ", " new collection ", " just dropped ")) return R.newArrivals();
+        if (has(t, " restock ", " back in stock ", " restocked ", " when will it be back ", " notify me when ")) return R.restock();
+        if (has(t, " customiz", " customise ", " personaliz", " personalise ", " print my name ", " embroider", " custom design ")) return R.customization();
+        if (has(t, " wash ", " washing ", " care instructions ", " how to clean ", " laundry ", " machine wash ", " shrink ")) return R.care();
+        if (has(t, " quality ", " durable ", " durability ", " well made ", " good quality ", " material quality ", " last long ")) return R.quality();
+        if (has(t, " material ", " fabric ", " made of ", " made from ", " cotton ", " polyester ", " what is it made ")) return R.material();
+        if (has(t, " size chart ", " size guide ", " measurements ", " measurement ", " run large ", " run small ", " runs large ", " runs small ", " true to size ", " fit like ", " sizing ")) return R.fit();
+        if (has(t, " do not know my size ", " not know my size ", " do not know what size ", " not sure about my size ", " not sure of my size ", " not sure what size ", " no idea what size ", " no idea about my size ", " unsure about my size ", " unsure of my size ", " idk my size ", " do not know my sizing ")) return R.sizeUnsure();
+        if (has(t, " what size should ", " which size ", " size should i ", " size do i need ", " size fits me ", " help me choose a size ", " choose my size ", " right size ", " my size ", " will this fit ", " will it fit ", " does it fit ", " fit me ", " people usually ", " do people get ", " usually get ", " popular size ", " common size ", " what size am i ", " what size would ", " size to get ", " size to buy ", " choose a size ", " pick a size ", " help me choose my size ", " size for me ")) return R.sizeRecommend();
+        if (has(t, " ship to ", " deliver to ", " shipping to ", " delivery to ", " ships to ") && !has(t, " canada ", " uk ", " abroad ", " another country ")) return R.shipDestination();
+        if (has(t, " tomorrow ", " next day ", " overnight ", " same day delivery ", " same-day ", " express delivery ", " express shipping ", " get it by ", " arrive by ", " in 2 days ", " in two days ", " in a day ", " in one day ")) return R.fastDelivery();
+        if (has(t, " urgently ", " urgent ", " asap ", " as soon as possible ", " in a hurry ", " need it fast ", " need it quickly ", " rush order ", " hurry ")) return R.urgent();
+        if (has(t, " ship", " deliver", " delivery ", " arrive ", " arrives ", " arrival ", " how long does it take ", " shipping time ", " delivery time ", " how fast ")) return R.shippingTime();
+        if (has(t, " discount ", " coupon ", " promo ", " voucher ", " offer code ", " code for ", " any deals ", " cheaper ", " discount code ", " any discount ", " have a sale code ")) return R.discount();
+        if (has(t, " on sale ", " any sale ", " sale ", " promotion ", " special offer ", " deals ", " offers ") && !has(t, " wholesale price ")) return R.sales();
+        if (has(t, " buy ", " purchase ", " checkout ", " check out ", " place an order ", " place order ", " i want one ", " want to order ", " get one ", " order one ", " order it ", " i want to buy ", " want clothes ", " need clothes ", " need some clothes ", " buy clothes ", " i want clothes ")) return R.buyIntent();
+        if (has(t, " product link ", " link to ", " where can i buy ", " where do i buy ", " buy it online ", " shop link ", " link for the hoodie ", " send me the link ", " website link ")) return R.whereToBuy();
+        if (size && has(t, " do you have ", " have you got ", " available in ", " in stock ", " comes in ", " come in ", " got any ", " you got ", " is there ", " have it in ")) return R.sizeCheck(size);
+        if (color && has(t, " have ", " come in ", " available ", " offer ", " get ", " want ", " do you ")) return R.colorPick(color);
+        if (has(t, " color ", " colors ", " colour ", " colours ", " what colors ", " which colors ")) return R.colors();
+        if (has(t, " size ", " sizes ", " size options ")) return R.sizes();
+        if (has(t, " too expensive ", " so expensive ", " very expensive ", " too pricey ", " too costly ", " overpriced ", " that is expensive ", " it is expensive ", " too much money ", " price is too high ", " cost is too high ")) return R.priceObjection();
+        if (has(t, " price ", " cost ", " how much ", " expensive ", " afford ", " pricing ", " how much is ", " $ ", " pls price ", " price pls ") || e === "price" || e === "cost" || e === "how much" || e === "price pls") return R.price();
+        var otherProduct = findOtherProduct(t);
+        if (otherProduct && has(t, " sell ", " have ", " stock ", " buy ", " carry ", " offer ", " looking for ")) return R.unknownProduct(otherProduct);
+        if (color && has(t, " in stock ", " stock right now ", " available right now ", " in stock now ")) return R.stockColor(color);
+        if (has(t, " in stock ", " stock ", " available ", " availability ", " sold out ", " do you have ", " is it available ", " you have the hoodie ")) {
+          if (has(t, " birthday ", " cake ", " pizza ", " food ")) return R.unrelated();
+          return R.availability();
+        }
+        if (has(t, " what do you sell ", " what you sell ", " what do you have ", " you sell ", " your products ", " your product ", " show me your products ", " show products ", " products ", " collection ", " what products ", " browse ", " catalog ", " catalogue ", " items do you ", " what do you offer ") || e === "products" || e === "what do you sell") return R.whatSell();
+        if (has(t, " hoodie ", " the hoodie ", " tell me about ", " details ", " product details ", " about the product ", " about it ") && e.length > 3) return R.material();
+
+        /* --- Generic greetings embedded in longer messages --- */
+        if (/^(hi|hello|hey)\b/.test(e)) return R.greeting();
+        if (has(t, " thank ")) return R.thanks();
+        if (has(t, " bye ", " goodbye ")) return R.goodbye();
+
+        /* --- Unrelated-topic fallback --- */
+        if (has(t, " weather ", " birthday cake", " pizza ", " joke ", " politics ", " football ", " soccer ", " movie ", " song ", " recipe ", " math ", " homework ", " president ", " stock market ")) return R.unrelated();
+
+        /* --- Unknown: dedicated fallback (never silent, never repeats) --- */
+        return getFallbackResponse(original, ctx, ctx.fallbackCount);
+      }
+
+      /* ================= SEND FLOW (ordered queue) ================= */
+      function sendUserMessage(text) {
+        var trimmed = String(text).trim();
+        if (!trimmed) return;
+        addMessage("customer", trimmed, new Date());
+        scrollToBottom(true);
+        replyQueue.push(trimmed);
+        processQueue();
+      }
+      function processQueue() {
+        if (processing || replyQueue.length === 0) return;
+        processing = true;
+        var nextText = replyQueue.shift();
+        var result;
+        try { result = generateReply(nextText); }
+        catch (err) { if (window.console) console.error("LUXE WEAR demo reply error:", err); result = null; }
+        if (!result || !String(result).trim()) { result = "Sorry — something glitched on my side for a second. I’m still here! 😊 Ask me about the product, sizes, colors, prices, shipping, or returns and I’ll answer right away."; ctx.chipSet = "general"; }
+        var chipsForReply = ctx.chipSet;
+        var delay = Math.min(650 + result.length * 5, 1500);
+        setTimeout(function () {
+          showTyping();
+          setTimeout(function () {
+            hideTyping();
+            addMessage("brand", result, new Date());
+            renderChips(chipsForReply);
+            scrollToBottom(true);
+            processing = false;
+            processQueue();
+          }, delay);
+        }, 200);
+      }
+      composerForm.addEventListener("submit", function (evt) {
+        evt.preventDefault();
+        var value = inputEl.value;
+        if (!value.trim()) return;
+        inputEl.value = ""; sendBtn.disabled = true;
+        sendUserMessage(value); inputEl.focus();
+      });
+      inputEl.addEventListener("input", function () { sendBtn.disabled = !inputEl.value.trim(); });
+      chipsEl.addEventListener("click", function (evt) {
+        var btn = evt.target.closest(".chip"); if (!btn) return;
+        sendUserMessage(btn.getAttribute("data-msg"));
+      });
+      document.getElementById("restartBtn").addEventListener("click", function () {
+        replyQueue = []; processing = false; hideTyping();
+        ctx = freshContext(); infoPop.hidden = true; infoBtn.setAttribute("aria-expanded", "false");
+        renderWelcome(); inputEl.focus();
+      });
+      document.getElementById("callBtn").addEventListener("click", function () { showToast("Voice calls aren’t part of this demo — messaging is where the automation shines."); });
+      document.getElementById("videoBtn").addEventListener("click", function () { showToast("Video calls aren’t part of this demo — messaging is where the automation shines."); });
+      infoBtn.addEventListener("click", function () {
+        var open = infoPop.hidden; infoPop.hidden = !open; infoBtn.setAttribute("aria-expanded", String(open));
+      });
+      renderWelcome();
+    </script>
+  </body>
+</html>
